@@ -26,6 +26,8 @@ import org.w3c.css.util.InvalidParamException;
 import org.w3c.css.util.Util;
 import org.w3c.css.util.Warnings;
 import org.w3c.css.values.CssExpression;
+import org.w3c.css.values.CssIdent;
+import org.w3c.css.values.CssValue;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -547,6 +549,14 @@ public final class CssFouffa extends CssParser {
     }
 
     /**
+     * Treat the "\9" CSS declaration hack as a vendor extension warning
+     * rather than a fatal error?
+     */
+    private boolean allowBackslash9Hack() {
+        return this.ac.getTreatVendorExtensionsAsWarnings();
+    }
+
+    /**
      * Assign an expression to a property. This function create a new property
      * with <code>property</code> and assign to it the expression with the
      * importance.
@@ -563,6 +573,12 @@ public final class CssFouffa extends CssParser {
         CssProperty prop;
         if (Util.onDebug) {
             System.err.println("Creating " + property + ": " + expression);
+        }
+
+        final CssValue lastValue = expression.getLastValue();
+
+        if (allowBackslash9Hack() && lastValue.hasBackslash9Hack()) {
+            expression.markVendorExtension();
         }
 
         try {
